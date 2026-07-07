@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>GoPro Journal</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="theme-color" content="#0d0f14"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23e63946'/%3E%3Ctext x='50' y='68' text-anchor='middle' font-family='Arial Black,sans-serif' font-size='62' font-weight='900' fill='%23ffffff'%3EG%3C/text%3E%3C/svg%3E"/>
+<style>
+:root{
+  --bg:#0d0f14;
+  --surface:#171a22;
+  --surface2:#1e2230;
+  --surface3:#252a38;
+  --text:#eef0f5;
+  --text2:#8b92a8;
+  --accent:#e63946;
+  --accent2:#c1121f;
+  --green:#2ec4b6;
+  --orange:#f4a261;
+  --blue:#0aa5e0;
+  --border:#2a2f42;
+  --radius:14px;
+  --tab-h:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;height:100%;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* HEADER */
+#header{padding:max(14px,env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--border)}
+.header-left h1{font-size:18px;font-weight:700;letter-spacing:-.02em}
+.header-left .sub{font-size:11px;color:var(--text2);margin-top:1px}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CONTENT */
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(var(--tab-h) + 16px + env(safe-area-inset-bottom))}
+
+/* TABBAR */
+#tabbar{position:fixed;bottom:0;left:0;right:0;background:rgba(13,15,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;height:calc(var(--tab-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);z-index:100}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text2);font-size:10px;font-weight:500}
+.tab svg{width:22px;height:22px;stroke-width:1.8}
+.tab.active{color:var(--accent)}
+
+/* SECTIONS */
+.section{display:none}.section.active{display:block}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+
+/* FORM */
+.form-group{margin-bottom:14px}
+label{font-size:12px;color:var(--text2);display:block;margin-bottom:5px;font-weight:500}
+input[type=text],input[type=date],input[type=number],textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit;outline:none;-webkit-appearance:none}
+input[type=text]:focus,input[type=date]:focus,input[type=number]:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:none;min-height:72px;line-height:1.5}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b92a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+input[type=date]{color-scheme:dark}
+
+/* TOGGLE PILLS */
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pill{padding:7px 12px;border-radius:20px;font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s}
+.pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pill.green.active{background:var(--green);border-color:var(--green)}
+.pill.orange.active{background:var(--orange);border-color:var(--orange)}
+.pill.blue.active{background:var(--blue);border-color:var(--blue)}
+
+/* STARS */
+.stars{display:flex;gap:6px;margin-top:4px}
+.star{font-size:24px;cursor:pointer;opacity:.3;transition:opacity .15s}
+.star.active{opacity:1}
+
+/* QUALITY BUTTONS */
+.quality-btns{display:flex;gap:8px}
+.qbtn{flex:1;padding:12px 8px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+.qbtn.active-keep{background:rgba(46,196,182,.15);border-color:var(--green);color:var(--green)}
+.qbtn.active-medium{background:rgba(244,162,97,.15);border-color:var(--orange);color:var(--orange)}
+.qbtn.active-trash{background:rgba(230,57,70,.15);border-color:var(--accent);color:var(--accent)}
+
+/* BTN */
+.btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.btn:active{opacity:.85}
+.btn-ghost{width:100%;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:14px;font-weight:500;cursor:pointer}
+.btn-ghost:active{opacity:.7}
+
+/* SESSION CARDS */
+.session-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;cursor:pointer}
+.session-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+.session-meta{flex:1}
+.session-date{font-size:11px;color:var(--text2);margin-bottom:2px}
+.session-title{font-size:14px;font-weight:600}
+.session-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.stag{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.session-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.qbadge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:8px}
+.qbadge-keep{background:rgba(46,196,182,.15);color:var(--green)}
+.qbadge-medium{background:rgba(244,162,97,.15);color:var(--orange)}
+.qbadge-trash{background:rgba(230,57,70,.15);color:var(--accent)}
+.clips-count{font-size:11px;color:var(--text2)}
+.session-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.session-body.open{display:block}
+.detail-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.detail-row:last-child{border-bottom:none}
+.detail-row .k{color:var(--text2)}
+.detail-row .v{font-weight:500;text-align:right;max-width:60%}
+.session-notes{font-size:13px;color:var(--text2);line-height:1.5;margin-top:8px;padding:10px;background:var(--surface2);border-radius:8px}
+.del-btn{margin-top:10px;width:100%;padding:9px;border-radius:9px;background:rgba(230,57,70,.1);border:1px solid rgba(230,57,70,.25);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.stat-val{font-size:28px;font-weight:700;color:var(--accent)}
+.stat-val.green{color:var(--green)}
+.stat-val.blue{color:var(--blue)}
+.stat-val.orange{color:var(--orange)}
+.stat-label{font-size:11px;color:var(--text2);margin-top:3px}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 24px;color:var(--text2)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.empty p{font-size:13px;line-height:1.5}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.filter-bar::-webkit-scrollbar{display:none}
+.fbtn{flex-shrink:0;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer}
+.fbtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* EXPORT */
+.export-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.export-card p{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="header-left">
+      <h1>GoPro Journal</h1>
+      <div class="sub" id="header-sub">Thaïlande · Juillet–Août 2026</div>
+    </div>
+    <div class="rec-dot"></div>
+  </div>
+
+  <div id="content">
+
+    <!-- ====== AJOUTER ====== -->
+    <div class="section active" id="sec-add">
+      <h2 style="font-size:15px;font-weight:700;margin-bottom:14px">Nouvelle session</h2>
+
+      <div class="card">
+        <div class="card-title">Quand & où</div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="f-date"/>
+        </div>
+        <div class="form-group">
+          <label>Lieu</label>
+          <input type="text" id="f-lieu" placeholder="Ex: Koh Tao — Plage de Tanote Bay"/>
+        </div>
+        <div class="form-group">
+          <label>Activité</label>
+          <input type="text" id="f-activite" placeholder="Ex: Snorkeling, Trek éléphants, Marché…"/>
+        </div>
+        <div class="form-group">
+          <label>Nom du fichier GoPro (optionnel)</label>
+          <input type="text" id="f-fichier" placeholder="Ex: GH12_0724_KohTao_snorkeling"/>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Clips & conditions</div>
+        <div class="form-group">
+          <label>Nombre de clips</label>
+          <input type="number" id="f-clips" placeholder="Ex: 12" min="0"/>
+        </div>
+        <div class="form-group">
+          <label>Lumière</label>
+          <div class="pills" id="pills-lumiere">
+            <div class="pill blue" data-group="lumiere" data-val="Plein soleil">☀️ Plein soleil</div>
+            <div class="pill blue" data-group="lumiere" data-val="Nuageux">⛅ Nuageux</div>
+            <div class="pill blue" data-group="lumiere" data-val="Ombre">🌤 Ombre</div>
+            <div class="pill blue" data-group="lumiere" data-val="Contre-jour">🌅 Contre-jour</div>
+            <div class="pill blue" data-group="lumiere" data-val="Nuit">🌙 Nuit</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Conditions eau (si applicable)</label>
+          <div class="pills" id="pills-eau">
+            <div class="pill green" data-group="eau" data-val="Eau claire">💎 Eau claire</div>
+            <div class="pill green" data-group="eau" data-val="Eau trouble">🌊 Eau trouble</div>
+            <div class="pill green" data-group="eau" data-val="Houle">🌊 Houle</div>
+            <div class="pill green" data-group="eau" data-val="Sans eau">🏝 Sans eau</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Accessoires utilisés</label>
+          <div class="pills" id="pills-acc">
+            <div class="pill" data-group="acc" data-val="Caisson">🏊 Caisson</div>
+            <div class="pill" data-group="acc" data-val="Filtre rouge">🔴 Filtre rouge</div>
+            <div class="pill" data-group="acc" data-val="Filtre magenta">🟣 Magenta</div>
+            <div class="pill" data-group="acc" data-val="Perche">🎯 Perche</div>
+            <div class="pill" data-group="acc" data-val="Support buccal">👄 Buccal</div>
+            <div class="pill" data-group="acc" data-val="Vélo">🚲 Vélo</div>
+            <div class="pill" data-group="acc" data-val="Trépied">📷 Trépied</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Qualité & note</div>
+        <div class="form-group">
+          <label>Évaluation globale</label>
+          <div class="quality-btns">
+            <div class="qbtn" data-q="keep">✅ À garder</div>
+            <div class="qbtn" data-q="medium">⚡ Moyen</div>
+            <div class="qbtn" data-q="trash">🗑 À jeter</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Tags libres (séparés par des virgules)</label>
+          <input type="text" id="f-tags" placeholder="Ex: éléphants, enfants, coucher de soleil"/>
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="f-notes" placeholder="Remarques : stabilisation, contre-jour, batterie faible, angle raté…"></textarea>
+        </div>
+      </div>
+
+      <button class="btn" id="save-btn">💾 Enregistrer la session</button>
+      <button class="btn-ghost" id="reset-btn">Réinitialiser le formulaire</button>
+    </div>
+
+    <!-- ====== JOURNAL ====== -->
+    <div class="section" id="sec-journal">
+      <div class="filter-bar" id="filter-bar">
+        <div class="fbtn active" data-filter="all">Tout</div>
+        <div class="fbtn" data-filter="keep">✅ À garder</div>
+        <div class="fbtn" data-filter="medium">⚡ Moyen</div>
+        <div class="fbtn" data-filter="trash">🗑 À jeter</div>
+      </div>
+      <div id="sessions-list"></div>
+    </div>
+
+    <!-- ====== STATS ====== -->
+    <div class="section" id="sec-stats">
+      <h2 style="font-size:15px;font-weight:700;margin-bottom:14px">Vue d'ensemble</h2>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="card" id="stats-detail"></div>
+    </div>
+
+    <!-- ====== EXPORT ====== -->
+    <div class="section" id="sec-export">
+      <h2 style="font-size:15px;font-weight:700;margin-bottom:14px">Export</h2>
+      <div class="export-card">
+        <div class="card-title">Export texte</div>
+        <p>Génère un résumé lisible de toutes tes sessions. Copie-colle dans Notes ou envoie par mail pour avoir un index hors-ligne.</p>
+        <button class="btn" id="export-txt-btn">📋 Copier le résumé</button>
+      </div>
+      <div class="export-card">
+        <div class="card-title">Export CSV</div>
+        <p>Fichier tableur pour trier et filtrer au retour. Ouvre dans Excel ou Numbers pour retrouver tes meilleurs clips rapidement.</p>
+        <button class="btn" id="export-csv-btn">📊 Télécharger le CSV</button>
+      </div>
+      <div class="export-card">
+        <div class="card-title">Données</div>
+        <p>Efface toutes les sessions enregistrées. Irréversible.</p>
+        <button class="btn-ghost" id="clear-btn" style="color:var(--accent);border-color:rgba(230,57,70,.3)">🗑 Effacer toutes les données</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TABBAR -->
+  <div id="tabbar">
+    <div class="tab active" data-section="add">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Ajouter
+    </div>
+    <div class="tab" data-section="journal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Journal
+    </div>
+    <div class="tab" data-section="stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Stats
+    </div>
+    <div class="tab" data-section="export">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STORAGE ============
+function getSessions(){try{return JSON.parse(localStorage.getItem('gp_sessions')||'[]')}catch{return[]}}
+function saveSessions(s){localStorage.setItem('gp_sessions',JSON.stringify(s))}
+
+// ============ TABS ============
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    const sec=tab.dataset.section;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('sec-'+sec).classList.add('active');
+    document.getElementById('content').scrollTop=0;
+    if(sec==='journal')renderJournal();
+    if(sec==='stats')renderStats();
+  });
+});
+
+// ============ PILLS (multi-select) ============
+const multiGroups=['acc'];
+const singleGroups=['lumiere','eau'];
+document.querySelectorAll('.pill').forEach(pill=>{
+  pill.addEventListener('click',()=>{
+    const g=pill.dataset.group;
+    if(multiGroups.includes(g)){
+      pill.classList.toggle('active');
+    } else {
+      document.querySelectorAll(`.pill[data-group="${g}"]`).forEach(p=>p.classList.remove('active'));
+      pill.classList.add('active');
+    }
+  });
+});
+
+// ============ QUALITY ============
+let currentQuality=null;
+document.querySelectorAll('.qbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.qbtn').forEach(b=>{b.classList.remove('active-keep','active-medium','active-trash')});
+    currentQuality=btn.dataset.q;
+    btn.classList.add('active-'+currentQuality);
+  });
+});
+
+// ============ DEFAULT DATE ============
+function todayStr(){const d=new Date();return d.toISOString().split('T')[0]}
+document.getElementById('f-date').value=todayStr();
+
+// ============ SAVE ============
+let editingId=null;
+document.getElementById('save-btn').addEventListener('click',()=>{
+  const date=document.getElementById('f-date').value;
+  const lieu=document.getElementById('f-lieu').value.trim();
+  const activite=document.getElementById('f-activite').value.trim();
+  if(!date||!lieu||!activite){alert('Date, lieu et activité sont obligatoires.');return}
+
+  const fichier=document.getElementById('f-fichier').value.trim();
+  const lumiere=document.querySelector('.pill[data-group="lumiere"].active')?.dataset.val||'';
+  const eau=document.querySelector('.pill[data-group="eau"].active')?.dataset.val||'';
+  const acc=[...document.querySelectorAll('.pill[data-group="acc"].active')].map(p=>p.dataset.val);
+  const clips=parseInt(document.getElementById('f-clips').value)||0;
+  const tags=document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const notes=document.getElementById('f-notes').value.trim();
+
+  let sessions=getSessions();
+  if(editingId){
+    sessions=sessions.map(s=>s.id===editingId?{...s,date,lieu,activite,fichier,clips,lumiere,eau,acc,quality:currentQuality||'medium',tags,notes}:s);
+    showToast('Session mise à jour ✓');
+    editingId=null;
+    document.getElementById('save-btn').textContent='💾 Enregistrer la session';
+  } else {
+    const session={id:Date.now(),date,lieu,activite,fichier,clips,lumiere,eau,acc,quality:currentQuality||'medium',tags,notes};
+    sessions.unshift(session);
+    showToast('Session enregistrée ✓');
+  }
+  saveSessions(sessions);
+  resetForm();
+});
+
+function resetForm(){
+  document.getElementById('f-date').value=todayStr();
+  document.getElementById('f-lieu').value='';
+  document.getElementById('f-activite').value='';
+  document.getElementById('f-fichier').value='';
+  document.getElementById('f-clips').value='';
+  document.getElementById('f-tags').value='';
+  document.getElementById('f-notes').value='';
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active-keep','active-medium','active-trash'));
+  currentQuality=null;
+}
+document.getElementById('reset-btn').addEventListener('click',()=>{
+  editingId=null;
+  document.getElementById('save-btn').textContent='💾 Enregistrer la session';
+  resetForm();
+});
+
+// ============ TOAST ============
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:calc(var(--tab-h) + 16px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#2ec4b6;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;transition:opacity .3s';document.body.appendChild(t)}
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._to);t._to=setTimeout(()=>t.style.opacity='0',2000);
+}
+
+// ============ JOURNAL ============
+let currentFilter='all';
+document.querySelectorAll('.fbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter=btn.dataset.filter;
+    renderJournal();
+  });
+});
+
+function qLabel(q){return q==='keep'?'À garder':q==='medium'?'Moyen':'À jeter'}
+function qBadgeClass(q){return q==='keep'?'qbadge-keep':q==='medium'?'qbadge-medium':'qbadge-trash'}
+function fmtDate(d){if(!d)return'';const[y,m,day]=d.split('-');const months=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];return day+' '+months[parseInt(m)-1]+' '+y}
+
+function renderJournal(){
+  const list=document.getElementById('sessions-list');
+  let sessions=getSessions();
+  if(currentFilter!=='all')sessions=sessions.filter(s=>s.quality===currentFilter);
+  if(sessions.length===0){
+    list.innerHTML='<div class="empty"><div class="empty-icon">🎬</div><div class="empty-title">Aucune session</div><p>Enregistre ta première session dans l\'onglet Ajouter.</p></div>';
+    return;
+  }
+  list.innerHTML='';
+  sessions.forEach(s=>{
+    const card=document.createElement('div');
+    card.className='session-card';
+    const tagsHtml=s.tags.map(t=>'<span class="stag">'+t+'</span>').join('');
+    card.innerHTML=`
+      <div class="session-header">
+        <div class="session-meta">
+          <div class="session-date">${fmtDate(s.date)}</div>
+          <div class="session-title">${s.lieu} — ${s.activite}</div>
+          <div class="session-tags">${tagsHtml}</div>
+        </div>
+        <div class="session-right">
+          <span class="qbadge ${qBadgeClass(s.quality)}">${qLabel(s.quality)}</span>
+          <span class="clips-count">${s.clips} clip${s.clips>1?'s':''}</span>
+        </div>
+      </div>
+      <div class="session-body" id="body-${s.id}">
+        <div class="detail-row"><span class="k">Lumière</span><span class="v">${s.lumiere||'—'}</span></div>
+        <div class="detail-row"><span class="k">Eau</span><span class="v">${s.eau||'—'}</span></div>
+        <div class="detail-row"><span class="k">Accessoires</span><span class="v">${s.acc.length?s.acc.join(', '):'—'}</span></div>
+        ${s.fichier?`<div class="detail-row"><span class="k">Fichier</span><span class="v" style="font-family:monospace;font-size:12px">${s.fichier}</span></div>`:''}
+        ${s.notes?`<div class="session-notes">${s.notes}</div>`:''}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="edit-btn" data-id="${s.id}" style="flex:1;padding:9px;border-radius:9px;background:rgba(10,165,224,.1);border:1px solid rgba(10,165,224,.25);color:#0aa5e0;font-size:13px;font-weight:600;cursor:pointer">✏️ Modifier</button>
+          <button class="del-btn" data-id="${s.id}" style="flex:1;padding:9px;border-radius:9px;background:rgba(230,57,70,.1);border:1px solid rgba(230,57,70,.25);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">🗑 Supprimer</button>
+        </div>
+      </div>`;
+    card.querySelector('.session-header').addEventListener('click',()=>{
+      const body=document.getElementById('body-'+s.id);
+      body.classList.toggle('open');
+    });
+    list.appendChild(card);
+  });
+
+  document.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      if(!confirm('Supprimer cette session ?'))return;
+      const id=parseInt(btn.dataset.id);
+      saveSessions(getSessions().filter(s=>s.id!==id));
+      renderJournal();
+    });
+  });
+
+  document.querySelectorAll('.edit-btn').forEach(btn=>{
+    btn.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id=parseInt(btn.dataset.id);
+      const s=getSessions().find(s=>s.id===id);
+      if(!s)return;
+      // Pré-remplir le formulaire
+      document.getElementById('f-date').value=s.date;
+      document.getElementById('f-lieu').value=s.lieu;
+      document.getElementById('f-activite').value=s.activite;
+      document.getElementById('f-fichier').value=s.fichier||'';
+      document.getElementById('f-clips').value=s.clips;
+      document.getElementById('f-fichier').value='';
+      // Lumière
+      document.querySelectorAll('.pill[data-group="lumiere"]').forEach(p=>{p.classList.toggle('active',p.dataset.val===s.lumiere)});
+      // Eau
+      document.querySelectorAll('.pill[data-group="eau"]').forEach(p=>{p.classList.toggle('active',p.dataset.val===s.eau)});
+      // Accessoires
+      document.querySelectorAll('.pill[data-group="acc"]').forEach(p=>{p.classList.toggle('active',s.acc.includes(p.dataset.val))});
+      // Qualité
+      document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active-keep','active-medium','active-trash'));
+      currentQuality=s.quality;
+      document.querySelector(`.qbtn[data-q="${s.quality}"]`)?.classList.add('active-'+s.quality);
+      // Mettre en mode édition
+      editingId=id;
+      document.getElementById('save-btn').textContent='💾 Mettre à jour la session';
+      // Aller sur l'onglet Ajouter
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(sec=>sec.classList.remove('active'));
+      document.querySelector('.tab[data-section="add"]').classList.add('active');
+      document.getElementById('sec-add').classList.add('active');
+      document.getElementById('content').scrollTop=0;
+    });
+  });
+}
+
+// ============ STATS ============
+function renderStats(){
+  const sessions=getSessions();
+  const grid=document.getElementById('stats-grid');
+  const detail=document.getElementById('stats-detail');
+  if(sessions.length===0){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📊</div><div class="empty-title">Aucune donnée</div><p>Enregistre des sessions pour voir tes stats.</p></div>';
+    detail.innerHTML='';return;
+  }
+  const totalClips=sessions.reduce((a,s)=>a+s.clips,0);
+  const keep=sessions.filter(s=>s.quality==='keep').length;
+  const jours=[...new Set(sessions.map(s=>s.date))].length;
+  const allTags=sessions.flatMap(s=>s.tags);
+  const tagCount={};allTags.forEach(t=>{tagCount[t]=(tagCount[t]||0)+1});
+  const topTags=Object.entries(tagCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  grid.innerHTML=`
+    <div class="stat-card"><div class="stat-val">${sessions.length}</div><div class="stat-label">Sessions</div></div>
+    <div class="stat-card"><div class="stat-val blue">${totalClips}</div><div class="stat-label">Clips total</div></div>
+    <div class="stat-card"><div class="stat-val green">${keep}</div><div class="stat-label">À garder</div></div>
+    <div class="stat-card"><div class="stat-val orange">${jours}</div><div class="stat-label">Jours filmés</div></div>`;
+
+  let detailHtml='<div class="card-title">Top tags</div>';
+  if(topTags.length){
+    topTags.forEach(([tag,count])=>{
+      detailHtml+=`<div class="detail-row"><span class="k">#${tag}</span><span class="v">${count} session${count>1?'s':''}</span></div>`;
+    });
+  } else {detailHtml+='<div style="font-size:13px;color:var(--text2)">Aucun tag enregistré.</div>'}
+  detail.innerHTML=detailHtml;
+}
+
+// ============ EXPORT ============
+document.getElementById('export-txt-btn').addEventListener('click',()=>{
+  const sessions=getSessions();
+  if(!sessions.length){alert('Aucune session à exporter.');return}
+  let txt='GOPRO JOURNAL — THAÏLANDE 2026\n'+'='.repeat(36)+'\n\n';
+  sessions.forEach(s=>{
+    txt+=`📅 ${fmtDate(s.date)} — ${s.lieu}\n`;
+    txt+=`🎬 ${s.activite} | ${s.clips} clip${s.clips>1?'s':''} | ${qLabel(s.quality)}\n`;
+    if(s.lumiere)txt+=`☀️ ${s.lumiere}`;
+    if(s.eau)txt+=` | 💧 ${s.eau}`;
+    txt+='\n';
+    if(s.acc.length)txt+=`🎒 ${s.acc.join(', ')}\n`;
+    if(s.tags.length)txt+=`🏷 ${s.tags.join(', ')}\n`;
+    if(s.notes)txt+=`📝 ${s.notes}\n`;
+    txt+='\n';
+  });
+  navigator.clipboard.writeText(txt).then(()=>showToast('Copié dans le presse-papier ✓')).catch(()=>alert('Copie manuelle :\n\n'+txt));
+});
+
+document.getElementById('export-csv-btn').addEventListener('click',()=>{
+  const sessions=getSessions();
+  if(!sessions.length){alert('Aucune session à exporter.');return}
+  let csv='Date,Lieu,Activité,Clips,Lumière,Eau,Accessoires,Qualité,Tags,Notes\n';
+  sessions.forEach(s=>{
+    const esc=v=>'"'+String(v).replace(/"/g,'""')+'"';
+    csv+=[s.date,s.lieu,s.activite,s.clips,s.lumiere,s.eau,s.acc.join('|'),qLabel(s.quality),s.tags.join('|'),s.notes].map(esc).join(',')+'\n';
+  });
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='gopro-journal-thailande.csv';a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV téléchargé ✓');
+});
+
+document.getElementById('clear-btn').addEventListener('click',()=>{
+  if(!confirm('Effacer TOUTES les sessions ? Cette action est irréversible.'))return;
+  localStorage.removeItem('gp_sessions');
+  showToast('Données effacées');
+  renderJournal();
+});
+
+// Init
+renderJournal();
+</script>
+</body>
+</html>
